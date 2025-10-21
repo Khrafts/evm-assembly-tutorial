@@ -1,0 +1,24 @@
+// send calldata -> function dispatch -> function call
+
+// 60008060093d393df3 -> contract creation bytecode
+// It's basically saying:
+//  take the binary after me and stick it on chain dude!
+// XXXX?              -> Runtime code
+
+#define macro MAIN() = takes(0) returns (0) {
+    // 0x00                // [0]
+    // calldataload        // [calldata[:32]]
+    
+    // right shift calldata in stack (32 bytes) so that only the 
+    // first 4 bytes remain (function selector)
+    // we'd be shifting by 32-4 = 28 bytes
+    // that is 28 * 8 (bits) = 224 bits
+    // we need to shift the item on the stack by 244 bits to get the
+    // first 4 bytes (32 bits) -> 0xe0
+    // 0xe0                // [0xe0, calldata[:32]]
+    // shr                 // [calldata[:4] -> function_selector]
+        
+    //  creation bytecode   runtime code
+    // 60058060093d393df3 5f3560e01c
+    0x00 calldataload 0xe0 shr // [function_selector]
+} // take off the stack, return from the stack
