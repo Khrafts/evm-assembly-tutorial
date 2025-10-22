@@ -5,53 +5,24 @@
 //  take the binary after me and stick it on chain dude!
 // XXXX?              -> Runtime code
 
+/* Interface */
+#define function updateHorseNumber(uint256) nonpayable returns()
+#define function readNumberOfHorses() view returns(uint256)
+
 #define macro MAIN() = takes(0) returns (0) {
-    // 0x00                // [0]
-    // calldataload        // [calldata[:32]]
-    
-    // right shift calldata in stack (32 bytes) so that only the 
-    // first 4 bytes remain (function selector)
-    // we'd be shifting by 32-4 = 28 bytes
-    // that is 28 * 8 (bits) = 224 bits
-    // we need to shift the item on the stack by 244 bits to get the
-    // first 4 bytes (32 bits) -> 0xe0
-    // 0xe0                // [0xe0, calldata[:32]]
-    // shr                 // [calldata[:4] -> function_selector]
-        
-    //  creation bytecode   runtime code
-    // 60058060093d393df3 5f3560e01c
-    0x00 calldataload 0xe0 shr // [function_selector]
-
-    // Jump -> function data associated with the function_selector
-    // updateHorseNumber -> 0xcdfead2e
-    // readNumberOfHorses -> 0xe026c017
-
+    // load function selector onto stack
+    0x00 calldataload 0xe0 shr              // [function_selector]
     // dispatcher for updateHorseNumber -> 0xcdfead2e
-    // push updateHorseNumber selector onto the stack
-    dup1                    // [function_selector, function_selector]
-    0xcdfead2e              // [0xcdfead2e, function_selector, function_selector]
-    eq                      // [true_if_equal_else_false, function_selector]
-    // jump to updateHorseNumber if true
-    updateJump              // [updateHorseNumberProgramCounter, true/false, function_selector]
-    jumpi                   // [function_selector] -> jump if clears values it consumed on either outcomes
-
+    dup1 __FUNC_SIG(updateHorseNumber) eq updateJump jumpi  // [function_selector]
 
     // dispatcher for readNumberOfHorses -> 0xe026c017
-                            // [function_selector]
-    0xe026c017              // [0xe026c017, function_selector]
-    eq                      // [true/false]
-
-    // jump to readHorseNumber if true
-    readJump                // [readJump, true/false]
-    jumpi                   // []
+    __FUNC_SIG(readNumberOfHorses) eq readJump jumpi        // []
     
-
+    0x00 0x00 revert
 
                             
-    // syntatic sugar to represent SET_NUMBER_OF_HORSES (a JUMPDEST) via updateJump
     updateJump:
         SET_NUMBER_OF_HORSES()
-    // syntatic sugar to represent READ_NUMBER_OF_HORSES (a JUMPDEST) via readJump
     readJump:
         READ_NUMBER_OF_HORSES()
 } 
