@@ -17,10 +17,16 @@ CALLVALUE               // -> [msg.value]
 DUP1                    // -> [msg.value, msg.value]
 ISZERO                  // -> [msg.value == 0, msg.value]]
 PUSH2 0x000f            // -> [0x000f, msg.value == 0, msg.value]
+
+// JUMPS to JUMPDEST at 0x000f if no value was sent (section to copy code to memory and return it on chain)
 JUMPI                   // -> [msg.value]
+
+// We only reach this part if value was sent
 PUSH0                   // -> [0, msg.value]
 DUP1                    // -> [0, 0, msg.value]
 REVERT                  // -> []
+
+// The copmiler would skip the above check if we had a constructor annotatated with 'payable'
 
 // Jump destination for when no value is sent
 // Sticks the code on chain
@@ -41,14 +47,24 @@ PUSH1 0x80              // -> [0x80]
 PUSH1 0x40              // -> [0x40, 0x80]
 MSTORE                  // -> []
 
-CALLVALUE
-DUP1
+// Check for msg.value sent with call
+CALLVALUE               // -> [msg.value]
+DUP1                    // -> [msg.value, msg.value]
 ISZERO
 PUSH2 0x000f
 JUMPI
+
+// Jump to "continue!" if no value was sent
+
+// If value was sent, revert
+// Solidity has determined that we have no payable functions, hence it reverts on any value sent
 PUSH0
 DUP1
 REVERT
+
+// continue!
+// Checks to see if the calldata is big enough to contain a function selector
+// This is happenining because we do not have a fallback function defined so it expects us to call a function
 JUMPDEST
 POP
 PUSH1 0x04
@@ -56,6 +72,10 @@ CALLDATASIZE
 LT
 PUSH2 0x0034
 JUMPI
+// calldata less than 4 bytes, jump to "revert_calldata!"
+
+
+// Function dispatcher
 PUSH0
 CALLDATALOAD
 PUSH1 0xe0
@@ -70,10 +90,15 @@ PUSH4 0xe026c017
 EQ
 PUSH2 0x0054
 JUMPI
+
+// revert_calldata! JUMPDEST
+// Revert Jumpdest
 JUMPDEST
 PUSH0
 DUP1
 REVERT
+
+
 JUMPDEST
 PUSH2 0x0052
 PUSH1 0x04
