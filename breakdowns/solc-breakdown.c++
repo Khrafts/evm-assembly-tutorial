@@ -23,19 +23,24 @@ DUP1                    // -> [0, 0, msg.value]
 REVERT                  // -> []
 
 // Jump destination for when no value is sent
-JUMPDEST
-POP
-PUSH2 0x0143
-DUP1
-PUSH2 0x001d
-PUSH0
-CODECOPY
-PUSH0
-RETURN
-INVALID
-PUSH1 0x80
-PUSH1 0x40
-MSTORE
+// Sticks the code on chain
+JUMPDEST                // -> [msg.value]
+POP                     // -> []
+PUSH2 0x0143            // -> [0x0143]
+DUP1                    // -> [0x0143, 0x0143]
+PUSH2 0x001d            // -> [0x001d, 0x0143, 0x0143]
+PUSH0                   // -> [0, 0x001d, 0x0143, 0x0143]
+CODECOPY                // -> [0x0143]                      Memory[0:0x0143] = Runtime Code[0x001d:0x0160]
+PUSH0                   // -> [0, 0x0143] 
+RETURN                  // -> []                            
+INVALID                 // -> []
+
+// 2. Runtime Code
+// Free memory pointer
+PUSH1 0x80              // -> [0x80]    
+PUSH1 0x40              // -> [0x40, 0x80]
+MSTORE                  // -> []
+
 CALLVALUE
 DUP1
 ISZERO
