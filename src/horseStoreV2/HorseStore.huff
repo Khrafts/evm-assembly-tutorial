@@ -17,14 +17,22 @@
 // func_selector uint256
 #define macro FEED_HORSE() = takes(0) returns(0) {
     timestamp                           // [timestamp]
-    0x04 calldataload                   // [timestamp, horseId]
-    [HORSE_FED_TIMESTAMP_LOCATION]      // [HORSE_FED_TIMESTAMP_LOCATION, timestamp, horseId]
+    0x04 calldataload                   // [horseId, timestamp]
+    [HORSE_FED_TIMESTAMP_LOCATION]      // [HORSE_FED_TIMESTAMP_LOCATION, horseId, timestamp]
     // sstore the timestamp with the horse id key
     STORE_ELEMENT_FROM_KEYS(0x00)       // []
     stop
 }
 
-#define macro GET_HORSE_FED_TIMESTAMP() = takes(0) returns(0) {}
+#define macro GET_HORSE_FED_TIMESTAMP() = takes(0) returns(0) {
+    0x04 calldataload                    // [horseId]
+    [HORSE_FED_TIMESTAMP_LOCATION]       // [HORSE_FED_TIMESTAMP_LOCATION, horseId]
+    // sload the timestamp with the horse id key
+    LOAD_ELEMENT_FROM_KEYS(0x00)        // [horseFedTimestamp]
+
+    0x00 mstore                         // []   // Memory [0x00: horseFedTimestamp]
+    0x20 0x00 return                    // []
+}
 
 #define macro MAIN() = takes(0) returns(0) {
     0x00 calldataload 0xe0 shr
@@ -77,4 +85,11 @@
     // Input stack: [slot, key1, key2, value]
     GET_SLOT_FROM_KEYS(<mem_ptr>)   // [slot, value]
     sstore                          // []
+}
+
+/// @notice Load an element onto the stack from two keys
+#define macro LOAD_ELEMENT_FROM_KEYS(mem_ptr) = takes(2) returns(1) {
+    // Input stack: [key1, key2]
+    GET_SLOT_FROM_KEYS(<mem_ptr>)   // [slot]
+    sload                           // [value]
 }
