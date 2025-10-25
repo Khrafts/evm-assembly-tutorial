@@ -12,10 +12,12 @@
 // storage slot
 #define constant HORSE_FED_TIMESTAMP_LOCATION = FREE_STORAGE_POINTER() // storage slot for the hashmap
 
+
+
 // func_selector uint256
 #define macro FEED_HORSE() = takes(0) returns(0) {
     timestamp                           // [timestamp]
-    0x00 calldataload                   // [timestamp, horseId]
+    0x04 calldataload                   // [timestamp, horseId]
     [HORSE_FED_TIMESTAMP_LOCATION]      // [HORSE_FED_TIMESTAMP_LOCATION, timestamp, horseId]
     // sstore the timestamp with the horse id key
     STORE_ELEMENT_FROM_KEYS(0x00)       // []
