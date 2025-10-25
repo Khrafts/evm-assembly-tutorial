@@ -1,15 +1,28 @@
+/* Import */
+// #include "../../lib/huffmate/src/data-structures/Hashmap.huff"
+
+
+/* HorseStore interface */
 #define function mintHorse() nonpayable returns()
 #define function feedHorse(uint256) nonpayable returns()
 #define function isHappyHorse(uint256) view returns(bool)
 #define function horseIdToFedTimeStamp(uint256) view returns(uint256)
 #define function HORSE_HAPPY_IF_FED_WITHIN() view returns(uint256)
 
+// storage slot
+#define constant HORSE_FED_TIMESTAMP_LOCATION = FREE_STORAGE_POINTER() // storage slot for the hashmap
+
 // func_selector uint256
 #define macro FEED_HORSE() = takes(0) returns(0) {
-    timestamp
-    0x04 calldataload
+    timestamp                           // [timestamp]
+    0x00 calldataload                   // [timestamp, horseId]
+    [HORSE_FED_TIMESTAMP_LOCATION]      // [HORSE_FED_TIMESTAMP_LOCATION, timestamp, horseId]
     // sstore the timestamp with the horse id key
+    STORE_ELEMENT_FROM_KEYS(0x00)       // []
+    stop
 }
+
+#define macro GET_HORSE_FED_TIMESTAMP() = takes(0) returns(0) {}
 
 #define macro MAIN() = takes(0) returns(0) {
     0x00 calldataload 0xe0 shr
@@ -32,7 +45,7 @@
     isHappyHorse:
         IS_HAPPY_HORSE()
     horseIdToFed:
-        HORSE_ID_TO_FED_TIMESTAMP()
+        GET_HORSE_FED_TIMESTAMP()
     horseHappyFed:
         HORSE_HAPPY_IF_FED_WITHIN()
 }
@@ -40,5 +53,26 @@
 
 #define macro MINT_HORSE() = takes(0) returns(0) {}
 #define macro IS_HAPPY_HORSE() = takes(0) returns(0) {}
-#define macro HORSE_ID_TO_FED_TIMESTAMP() = takes(0) returns(0) {}
 #define macro HORSE_HAPPY_IF_FED_WITHIN() = takes(0) returns(0) {}
+
+/// @notice Get the storage slot from two keys
+#define macro GET_SLOT_FROM_KEYS(mem_ptr) = takes(2) returns(1) {
+    // Input stack: [slot, key]
+
+    // load data into memory for hashing
+    <mem_ptr> 0x20 add      // [<mem_ptr> + 0x20, slot, key]
+    mstore                  // [key]
+    <mem_ptr>               // [<mem_ptr>, key]
+    mstore                  // []
+
+    // hash the data, generating the final slot
+    0x40 <mem_ptr>          // [<mem_ptr>, 64]
+    sha3                    // [slot]   
+}
+
+/// @notice Store an element from two keys
+#define macro STORE_ELEMENT_FROM_KEYS(mem_ptr) = takes(3) returns (0) {
+    // Input stack: [slot, key1, key2, value]
+    GET_SLOT_FROM_KEYS(<mem_ptr>)   // [slot, value]
+    sstore                          // []
+}
