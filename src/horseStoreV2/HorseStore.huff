@@ -28,10 +28,24 @@
     0x04 calldataload                    // [horseId]
     [HORSE_FED_TIMESTAMP_LOCATION]       // [HORSE_FED_TIMESTAMP_LOCATION, horseId]
     // sload the timestamp with the horse id key
-    LOAD_ELEMENT_FROM_KEYS(0x00)        // [horseFedTimestamp]
+    LOAD_ELEMENT_FROM_KEYS(0x00)         // [horseFedTimestamp]
 
-    0x00 mstore                         // []   // Memory [0x00: horseFedTimestamp]
-    0x20 0x00 return                    // []
+    0x00 mstore                          // []   // Memory [0x00: horseFedTimestamp]
+    0x20 0x00 return                     // []
+}
+
+#define macro IS_HAPPY_HORSE() = takes(0) returns(0) {
+    0x04 calldataload                    // [horseId]
+    [HORSE_FED_TIMESTAMP_LOCATION]       // [HORSE_FED_TIMESTAMP_LOCATION, horseId]
+    LOAD_ELEMENT_FROM_KEYS(0x00)         // [horseFedTimestamp]
+    timestamp                            // [currentTimestamp, horseFedTimestamp]
+    0x15180                              // [0x15180, currentTimestamp, horseFedTimestamp]
+    swap1                                // [currentTimestamp, 0x15180, horseFedTimestamp]
+    sub                                  // [timeSinceFed, horseFedTimestamp]
+    swap1                                // [horseFedTimestamp, timeSinceFed]
+    gt                                   // [isGt]
+    0x00 mstore                          // []   // Memory [0x00: isHappy]
+    0x20 0x00 return                     // []
 }
 
 #define macro MAIN() = takes(0) returns(0) {
@@ -62,7 +76,6 @@
 
 
 #define macro MINT_HORSE() = takes(0) returns(0) {}
-#define macro IS_HAPPY_HORSE() = takes(0) returns(0) {}
 #define macro HORSE_HAPPY_IF_FED_WITHIN() = takes(0) returns(0) {}
 
 /// @notice Get the storage slot from two keys
